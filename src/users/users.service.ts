@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcryptjs';   
 
 @Injectable()
@@ -31,11 +31,11 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
-  async findAll() {
+  async getAllUsers() {
     return this.userRepository.find({ relations: ['role'] });
   }
 
-  async findOne(id: number) {
+  async getUserById(id: number) {
     const user = await this.userRepository.findOne({
       where: { id },
       relations: ['role']
@@ -53,7 +53,7 @@ export class UsersService {
   }
 
   async changePassword(id: number, newPassword: string) {
-    const user = await this.findOne(id)
+    const user = await this.getUserById(id)
 
     const hashPassword = await bcrypt.hash(newPassword, 5)
 
@@ -70,6 +70,21 @@ export class UsersService {
   async getUserByEmail(email: string) {
     return await this.userRepository.findOne({
       where: { email },
+      relations: ['role']
+    });
+  }
+
+  async searchUsers(query: string) {
+    if (!query) {
+      return [];
+    }
+
+    return this.userRepository.find({
+      where: [
+        { username: ILike(`%${query}%`) },
+        { email: ILike(`%${query}%`) }
+      ],
+      select: ['id', 'username', 'email'],
       relations: ['role']
     });
   }

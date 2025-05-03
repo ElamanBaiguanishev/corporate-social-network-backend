@@ -1,5 +1,7 @@
 import { Role } from 'src/roles/entities/role.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Chat } from 'src/chat/entities/chat.entity';
+import { Message } from 'src/chat/entities/message.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, OneToMany } from 'typeorm';
 
 @Entity('users')
 export class User {
@@ -17,4 +19,10 @@ export class User {
 
     @ManyToOne(() => Role, role => role.users)
     role: Role;
+
+    @ManyToMany(() => Chat, chat => chat.participants)
+    chats: Chat[];
+
+    @OneToMany(() => Message, message => message.sender)
+    messages: Message[];
 }

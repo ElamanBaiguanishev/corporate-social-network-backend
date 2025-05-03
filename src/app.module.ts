@@ -6,6 +6,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { AuthModule } from './auth/auth.module';
+import { ChatModule } from './chat/chat.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { FeedModule } from './feed/feed.module';
+import { TasksModule } from './tasks/tasks.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -25,9 +30,21 @@ import { AuthModule } from './auth/auth.module';
       }),
       inject: [ConfigService],
     }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (ConfigService: ConfigService) => ({
+        secret: ConfigService.get('JWT_SECRET'),
+        signOptions: { expiresIn: '30d' }
+      }),
+      inject: [ConfigService]
+    }),
     UsersModule,
     RolesModule,
     AuthModule,
+    ChatModule,
+    NotificationsModule,
+    FeedModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
