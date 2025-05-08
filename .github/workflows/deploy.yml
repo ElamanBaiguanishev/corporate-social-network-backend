@@ -1,0 +1,41 @@
+name: Deploy NestJS to VPS via SSH and Docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Deploy to VPS over SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        script: |
+          cd /var/www/vkr-api || mkdir -p /var/www/vkr-api && cd /var/www/vkr-api
+
+          # Клонируем репозиторий, если нужно:
+          if [ ! -d ".git" ]; then
+            git clone https://github.com/<ТВОЙ-GITHUB-ЮЗЕР>/<РЕПОЗИТОРИЙ>.git ./
+          else
+            git pull
+          fi
+
+          docker build -t nest-api .
+
+          docker stop nest-api || true
+          docker rm nest-api || true
+
+          docker run -d \
+            --name nest-api \
+            --env-file .env \
+            -p 3000:3000 \
+            nest-api
