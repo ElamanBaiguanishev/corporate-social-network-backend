@@ -3,7 +3,7 @@ name: Deploy NestJS to VPS via SSH and Docker
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
