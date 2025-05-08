@@ -16,26 +16,30 @@ jobs:
     - name: Deploy to VPS over SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.PRIVATE_KEY }}
+        host: ${{ secrets.HOST }}  # Адрес твоего сервера
+        username: ${{ secrets.USERNAME }}  # Имя пользователя
+        key: ${{ secrets.PRIVATE_KEY }}  # Приватный SSH ключ
         script: |
-          cd /var/www/vkr-api || mkdir -p /var/www/vkr-api && cd /var/www/vkr-api
+          cd /var/www/vkr/api
+          
+          # Если репозиторий уже клонирован, делаем pull
+          git pull || git clone https://github.com/ElamanBaiguanishev/corporate-social-network-backend .
 
-          # Клонируем репозиторий, если нужно:
-          if [ ! -d ".git" ]; then
-            git clone https://github.com/<ТВОЙ-GITHUB-ЮЗЕР>/<РЕПОЗИТОРИЙ>.git ./
-          else
-            git pull
-          fi
-
+          # Строим Docker-образ
           docker build -t nest-api .
 
+          # Останавливаем и удаляем старый контейнер (если есть)
           docker stop nest-api || true
           docker rm nest-api || true
 
+          # Запускаем новый контейнер, передавая переменные окружения
           docker run -d \
             --name nest-api \
-            --env-file .env \
+            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            -e DB_HOST="${{ secrets.DB_HOST }}" \
+            -e DB_PORT="${{ secrets.DB_PORT }}" \
+            -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+            -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            -e DB_NAME="${{ secrets.DB_NAME }}" \
             -p 3000:3000 \
             nest-api
